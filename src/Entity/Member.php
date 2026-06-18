@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Repository\MemberRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Represents a library member who can borrow books.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ORM\Table(name: 'member')]
 class Member
 {

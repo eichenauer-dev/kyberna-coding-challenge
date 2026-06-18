@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\CreateLoanRequest;
+use App\Exception\BookNotFoundException;
+use App\Exception\MemberNotFoundException;
+use App\Exception\NoCopiesAvailableException;
 use App\Repository\BookRepository;
+use App\Repository\MemberRepository;
+use App\Service\LoanService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -16,14 +24,18 @@ use Symfony\Component\Routing\Attribute\Route;
 class ApiController extends AbstractController
 {
     /**
-     * Initializes the API controller with book data access.
+     * Initializes the API controller with required services.
      *
      * @param BookRepository $bookRepository
+     * @param MemberRepository $memberRepository
+     * @param LoanService $loanService
      *
      * @return void
      */
     public function __construct(
         private readonly BookRepository $bookRepository,
+        private readonly MemberRepository $memberRepository,
+        private readonly LoanService $loanService,
     ) {
     }
 
@@ -36,5 +48,37 @@ class ApiController extends AbstractController
     public function books(): JsonResponse
     {
         return $this->json($this->bookRepository->findAll());
+    }
+
+    /**
+     * Returns a list of all library members.
+     *
+     * @return JsonResponse
+     */
+    #[Route('/members', name: 'members_list', methods: ['GET'])]
+    public function members(): JsonResponse
+    {
+        return $this->json($this->memberRepository->findAll());
+    }
+
+    /**
+     * Creates a new loan for the given book and member.
+     *
+     * @param CreateLoanRequest $request
+     *
+     * @return JsonResponse
+     */
+    #[Route('/loans', name: 'loans_create', methods: ['POST'])]
+    public function createLoan(#[MapRequestPayload] CreateLoanRequest $request): JsonResponse
+    {
+        try {
+            $loan = $this->loanService->createLoan($request->bookId, $request->memberId);
+        } catch (BookNotFoundException|MemberNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (NoCopiesAvailableException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_CONFLICT);
+        }
+
+        return $this->json($loan, Response::HTTP_CREATED);
     }
 }
