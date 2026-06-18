@@ -6,9 +6,12 @@ namespace App\Controller;
 
 use App\Dto\CreateLoanRequest;
 use App\Exception\BookNotFoundException;
+use App\Exception\LoanAlreadyReturnedException;
+use App\Exception\LoanNotFoundException;
 use App\Exception\MemberNotFoundException;
 use App\Exception\NoCopiesAvailableException;
 use App\Repository\BookRepository;
+use App\Repository\LoanRepository;
 use App\Repository\MemberRepository;
 use App\Service\LoanService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +31,7 @@ class ApiController extends AbstractController
      *
      * @param BookRepository $bookRepository
      * @param MemberRepository $memberRepository
+     * @param LoanRepository $loanRepository
      * @param LoanService $loanService
      *
      * @return void
@@ -35,6 +39,7 @@ class ApiController extends AbstractController
     public function __construct(
         private readonly BookRepository $bookRepository,
         private readonly MemberRepository $memberRepository,
+        private readonly LoanRepository $loanRepository,
         private readonly LoanService $loanService,
     ) {
     }
@@ -62,6 +67,17 @@ class ApiController extends AbstractController
     }
 
     /**
+     * Returns a list of all loans.
+     *
+     * @return JsonResponse
+     */
+    #[Route('/loans', name: 'loans_list', methods: ['GET'])]
+    public function loans(): JsonResponse
+    {
+        return $this->json($this->loanRepository->findAll());
+    }
+
+    /**
      * Creates a new loan for the given book and member.
      *
      * @param CreateLoanRequest $request
@@ -80,5 +96,26 @@ class ApiController extends AbstractController
         }
 
         return $this->json($loan, Response::HTTP_CREATED);
+    }
+
+    /**
+     * Marks a loan as returned and restores the book's available copy count.
+     *
+     * @param int $id
+     *
+     * @return JsonResponse
+     */
+    #[Route('/loans/{id}/return', name: 'loans_return', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function returnLoan(int $id): JsonResponse
+    {
+        try {
+            $loan = $this->loanService->returnLoan($id);
+        } catch (LoanNotFoundException|BookNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (LoanAlreadyReturnedException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_CONFLICT);
+        }
+
+        return $this->json($loan);
     }
 }

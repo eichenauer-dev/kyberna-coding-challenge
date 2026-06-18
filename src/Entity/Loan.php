@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Repository\LoanRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Represents a book loan between a member and a book.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: LoanRepository::class)]
 #[ORM\Table(name: 'loan')]
 class Loan
 {
