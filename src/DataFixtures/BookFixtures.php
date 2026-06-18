@@ -8,6 +8,9 @@ use App\Entity\Book;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
+/**
+ * Loads sample book data into the database for local development.
+ */
 class BookFixtures extends Fixture
 {
     public const BOOK_GATSBY = 'book-gatsby';
@@ -16,6 +19,13 @@ class BookFixtures extends Fixture
     public const BOOK_DUNE = 'book-dune';
     public const BOOK_PRIDE = 'book-pride';
 
+    /**
+     * Persists sample books and registers fixture references.
+     *
+     * @param ObjectManager $manager
+     *
+     * @return void
+     */
     public function load(ObjectManager $manager): void
     {
         $books = [

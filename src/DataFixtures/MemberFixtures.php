@@ -8,12 +8,24 @@ use App\Entity\Member;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
+/**
+ * Loads sample member data into the database for local development.
+ */
 class MemberFixtures extends Fixture
 {
     public const MEMBER_ALICE = 'member-alice';
     public const MEMBER_BOB = 'member-bob';
     public const MEMBER_CAROL = 'member-carol';
 
+    /**
+     * Persists sample members and registers fixture references.
+     *
+     * @param ObjectManager $manager
+     *
+     * @return void
+     *
+     * @throws \DateMalformedStringException
+     */
     public function load(ObjectManager $manager): void
     {
         $members = [

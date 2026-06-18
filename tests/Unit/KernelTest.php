@@ -9,6 +9,9 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class KernelTest extends KernelTestCase
 {
+    /**
+     * @return void
+     */
     public function testKernelBoots(): void
     {
         self::bootKernel();
