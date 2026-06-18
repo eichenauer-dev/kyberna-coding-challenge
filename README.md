@@ -118,6 +118,32 @@ docker compose exec app php bin/console doctrine:migrations:migrate --no-interac
 docker compose exec app php bin/console doctrine:migrations:status
 ```
 
+### Fixtures (sample data)
+
+Doctrine Fixtures load sample books and members into the development database. Fixture classes live in `src/DataFixtures/`:
+
+| Fixture | Data |
+|---------|------|
+| `BookFixtures` | 5 sample books |
+| `MemberFixtures` | 3 sample members |
+
+Load fixtures after migrations have been applied:
+
+```bash
+docker compose exec app php bin/console doctrine:fixtures:load --no-interaction
+```
+
+> **Warning:** This command **purges all existing data** in the database before loading the fixtures.
+
+To reset your local environment to a clean state with sample data:
+
+```bash
+docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec app php bin/console doctrine:fixtures:load --no-interaction
+```
+
+Fixtures are intended for local development only and are not loaded automatically on container start.
+
 ### Test database
 
 In the `test` environment, Doctrine uses a separate database with the `_test` suffix (`app_test`). Create it once before running database-related tests:
@@ -188,6 +214,7 @@ docker compose exec -e APP_ENV=test app php bin/phpunit tests/Unit/ExampleTest.p
 ├── migrations/           # Doctrine migration files
 ├── public/               # Web root
 ├── src/                  # Application source code
+│   └── DataFixtures/     # Doctrine fixtures (sample data)
 ├── tests/                # PHPUnit tests
 ├── docker-compose.yml
 ├── .env.dev              # Docker & development environment
