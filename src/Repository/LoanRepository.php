@@ -26,4 +26,20 @@ class LoanRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Loan::class);
     }
+
+    /**
+     * Returns active loans that are past their due date.
+     *
+     * @return list<Loan>
+     */
+    public function findOverdueLoans(): array
+    {
+        return $this->createQueryBuilder('l')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt < :now')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('l.dueAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

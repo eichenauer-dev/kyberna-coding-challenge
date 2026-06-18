@@ -14,6 +14,7 @@ use App\Exception\NoCopiesAvailableException;
 use App\Repository\BookRepository;
 use App\Repository\LoanRepository;
 use App\Repository\MemberRepository;
+use App\Repository\ReminderRepository;
 use App\Service\LoanService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,6 +35,7 @@ class ApiController extends AbstractController
      * @param BookRepository $bookRepository
      * @param MemberRepository $memberRepository
      * @param LoanRepository $loanRepository
+     * @param ReminderRepository $reminderRepository
      * @param LoanService $loanService
      *
      * @return void
@@ -42,6 +44,7 @@ class ApiController extends AbstractController
         private readonly BookRepository $bookRepository,
         private readonly MemberRepository $memberRepository,
         private readonly LoanRepository $loanRepository,
+        private readonly ReminderRepository $reminderRepository,
         private readonly LoanService $loanService,
     ) {
     }
@@ -91,6 +94,17 @@ class ApiController extends AbstractController
     public function loans(): JsonResponse
     {
         return $this->json($this->loanRepository->findAll());
+    }
+
+    /**
+     * Returns a list of all stored overdue loan reminders.
+     *
+     * @return JsonResponse
+     */
+    #[Route('/reminders', name: 'reminders_list', methods: ['GET'])]
+    public function reminders(): JsonResponse
+    {
+        return $this->json($this->reminderRepository->findAll());
     }
 
     /**

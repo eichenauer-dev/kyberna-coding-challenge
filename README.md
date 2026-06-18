@@ -202,23 +202,97 @@ docker compose exec -e APP_ENV=test app php bin/phpunit tests/Unit/ExampleTest.p
 | `tests/Unit/` | `KernelTestCase` | Symfony kernel / service tests |
 | `tests/Controller/` | `WebTestCase` | HTTP / controller tests |
 
+## Overdue Loan Reminders
+
+The application includes a daily reminder process for overdue loans. Instead of sending real emails, reminders are stored in the `reminder` database table and can be viewed via the API.
+
+### Business logic
+
+A loan is considered **overdue** when:
+
+- `returned_at` is `NULL` (the book has not been returned yet)
+- `due_at` is in the past
+
+When the reminder process runs, it:
+
+1. Finds all overdue loans
+2. Creates one `reminder` record per overdue loan
+3. Skips loans that already received a reminder on the current day (no duplicate reminders per loan per day)
+
+Each reminder stores:
+
+| Field | Description |
+|-------|-------------|
+| `loan` | Reference to the overdue loan |
+| `message` | Human-readable reminder text (member name, book title, due date) |
+| `created_at` | Timestamp when the reminder was created |
+
+The processing is implemented with **Symfony Messenger**:
+
+```
+app:reminders:process (Command)
+  └── dispatches ProcessOverdueLoanReminders (Message)
+        └── ProcessOverdueLoanRemindersHandler
+              └── creates Reminder records in the database
+```
+
+### Console command
+
+Run the reminder process manually:
+
+```bash
+docker compose exec app php bin/console app:reminders:process
+```
+
+This command dispatches the reminder message to Symfony Messenger. The handler runs synchronously and writes any new reminders to the database.
+
+### Cron setup
+
+Schedule the command to run once per day, for example at 8:00 AM:
+
+```cron
+0 8 * * * cd /path/to/kyberna-coding-challenge && docker compose exec -T app php bin/console app:reminders:process
+```
+
+> **Note:** Use the `-T` flag in cron to disable TTY allocation.
+
 ## Project Structure
 
 ```
 .
-├── bin/                  # Symfony console & PHPUnit binaries
-├── config/               # Symfony configuration
+├── bin/                          # Symfony console & PHPUnit binaries
+├── config/
+│   ├── packages/                 # Bundle configuration (doctrine, messenger, validator, ...)
+│   ├── routes.yaml               # Route definitions
+│   └── services.yaml             # Service container configuration
 ├── docker/
-│   ├── Dockerfile        # PHP 8.4 application image
-│   └── start.sh          # Container startup script
-├── migrations/           # Doctrine migration files
-├── public/               # Web root
-├── src/                  # Application source code
-│   └── DataFixtures/     # Doctrine fixtures (sample data)
-├── tests/                # PHPUnit tests
+│   ├── Dockerfile                # PHP 8.4 application image
+│   └── start.sh                  # Container startup script
+├── migrations/                   # Doctrine migration files
+├── public/
+│   └── index.php                 # Application front controller
+├── src/
+│   ├── Command/                  # Console commands (e.g. overdue reminders)
+│   ├── Controller/
+│   │   └── ApiController.php     # REST API endpoints
+│   ├── DataFixtures/             # Sample data for local development
+│   ├── Dto/                      # Request/query DTOs with validation
+│   ├── Entity/                   # Doctrine entities (Book, Member, Loan, Reminder)
+│   ├── Exception/                # Domain-specific exceptions
+│   ├── Message/                  # Symfony Messenger messages
+│   ├── MessageHandler/           # Symfony Messenger handlers
+│   ├── Repository/               # Doctrine repositories
+│   ├── Service/
+│   │   └── LoanService.php       # Loan business logic
+│   └── Kernel.php
+├── tests/
+│   ├── Unit/                     # Unit tests (e.g. LoanServiceTest)
+│   └── bootstrap.php
 ├── docker-compose.yml
-├── .env.dev              # Docker & development environment
-└── phpunit.dist.xml      # PHPUnit configuration
+├── .env                          # Base environment configuration
+├── .env.dev                      # Docker & development environment
+├── .env.test                     # Test environment configuration
+└── phpunit.dist.xml              # PHPUnit configuration
 ```
 
 
