@@ -30,6 +30,9 @@
 !bin/console
 !bin/symfony_requirements
 
+# Jetbrains
+.idea/
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -40,5 +43,7 @@
 /vendor/
 ###< symfony/framework-bundle ###
 
-# Jetbrains
-.idea/
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

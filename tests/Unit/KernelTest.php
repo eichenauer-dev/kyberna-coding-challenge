@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Tests\Unit;
+
+use App\Kernel;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+class KernelTest extends KernelTestCase
+{
+    public function testKernelBoots(): void
+    {
+        self::bootKernel();
+
+        $this->assertInstanceOf(Kernel::class, self::$kernel);
+        $this->assertSame('test', self::$kernel->getEnvironment());
+    }
+}
