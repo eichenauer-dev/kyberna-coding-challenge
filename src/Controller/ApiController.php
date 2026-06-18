@@ -85,8 +85,9 @@ class ApiController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/loans', name: 'loans_create', methods: ['POST'])]
-    public function createLoan(#[MapRequestPayload] CreateLoanRequest $request): JsonResponse
-    {
+    public function createLoan(
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] CreateLoanRequest $request,
+    ): JsonResponse {
         try {
             $loan = $this->loanService->createLoan($request->bookId, $request->memberId);
         } catch (BookNotFoundException|MemberNotFoundException $exception) {
